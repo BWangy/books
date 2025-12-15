@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Books</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <h1>Books to Read</h1>
+    <form id="bookForm">
+      <label
+        >Book Title:
+        <input type="text" name="title" required />
+      </label>
+      <button type="submit">Add Book</button>
+      <button id="clearBooks">Clear Books</button>
+    </form>
+    <section id="books"></section>
+    <script>
+      async function loadBooks() {
+        const res = await fetch("/api/books");
+        const books = await res.json();
+
+        const container = document.getElementById("books");
+        container.innerHTML = "";
+
+        for (let b of books) {
+          container.innerHTML += `
+            <div class="book-card">
+              <h3>${b.title}</h3>
+              ${b.thumbnail ? `<img src="${b.thumbnail}" width="100">` : ""}
+              <div>
+                <p><strong>Author:</strong> ${b.authors.join(", ")}</p>
+                <p>${b.description}</p>
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      document
+        .getElementById("bookForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const title = new FormData(e.target).get("title");
+
+          await fetch("/api/books", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title }),
+          });
+
+          e.target.reset();
+          loadBooks();
+        });
+
+      loadBooks();
+
+      document
+        .getElementById("clearBooks")
+        .addEventListener("click", async () => {
+          if (!confirm("Are you sure you want to delete all books?")) return;
+
+          await fetch("/api/books", {
+            method: "DELETE",
+          });
+
+          loadBooks();
+        });
+    </script>
+  </body>
+</html>
